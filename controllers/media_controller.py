@@ -47,6 +47,7 @@ class MusicPlayerController(QObject):
         self._bluetoothConnected = False
 
         self._media_player_path: str | None = None
+        self._poll_miss_count: int = 0
         self._bus = dbus.SystemBus() if _DBUS_AVAILABLE else None
 
         self._mpris_timer = QTimer(self)
@@ -208,6 +209,7 @@ class MusicPlayerController(QObject):
         else:
             self._mpris_timer.stop()
             self._media_player_path = None
+            self._poll_miss_count = 0
             self._reset_track_state()
             logger.info("MPRIS polling stopped — device disconnected")
 
@@ -249,7 +251,16 @@ class MusicPlayerController(QObject):
         if self._media_player_path is None:
             self._media_player_path = self._find_media_player()
             if self._media_player_path is None:
-                return  # A2DP not yet established
+                self._poll_miss_count += 1
+                if self._poll_miss_count % 10 == 1:
+                    logger.info(
+                        "No BlueZ MediaPlayer1 found yet (poll #%d) — "
+                        "is music playing on the phone?",
+                        self._poll_miss_count,
+                    )
+                return
+            logger.info("MediaPlayer1 found at %s", self._media_player_path)
+            self._poll_miss_count = 0
 
         try:
             props_iface = dbus.Interface(
@@ -267,16 +278,16 @@ class MusicPlayerController(QObject):
 
             raw_art = track.get("AlbumArt", None)
             if raw_art is None:
-                logger.debug("AlbumArt key absent from Track dict (AVRCP art not provided)")
+                logger.info("AlbumArt key absent from Track dict (AVRCP art not provided by BlueZ)")
                 art_path = ""
             else:
                 art_path = str(raw_art)
                 if art_path:
                     if not art_path.startswith("file://"):
                         art_path = "file://" + art_path
-                    logger.debug("AlbumArt raw=%r  resolved=%s", str(raw_art), art_path)
+                    logger.info("AlbumArt raw=%r  resolved=%s", str(raw_art), art_path)
                 else:
-                    logger.debug("AlbumArt key present but empty")
+                    logger.info("AlbumArt key present but empty string")
 
             status = str(all_props.get("Status", "stopped"))
             position_ms = int(all_props.get("Position", 0))
