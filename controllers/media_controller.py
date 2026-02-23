@@ -1,4 +1,8 @@
+import json
 import logging
+import threading
+import urllib.parse
+import urllib.request
 
 from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
@@ -28,6 +32,9 @@ class MusicPlayerController(QObject):
     totalTimeChanged = pyqtSignal(int)
     bluetoothConnectedChanged = pyqtSignal(bool)
 
+    # Internal: carries iTunes art URL back to main thread from worker thread
+    _artFetched = pyqtSignal(str)
+
     # Control-request signals (consumed by future MPRIS/dbus integration)
     playPauseRequested = pyqtSignal()
     nextRequested = pyqtSignal()
@@ -48,6 +55,7 @@ class MusicPlayerController(QObject):
 
         self._media_player_path: str | None = None
         self._poll_miss_count: int = 0
+        self._art_search_key: tuple[str, str] = ("", "")  # (title, artist) last searched
         self._bus = dbus.SystemBus() if _DBUS_AVAILABLE else None
 
         self._mpris_timer = QTimer(self)
@@ -59,6 +67,9 @@ class MusicPlayerController(QObject):
         self.nextRequested.connect(self._mpris_next)
         self.previousRequested.connect(self._mpris_previous)
         # seekRequested is a no-op: BlueZ MediaPlayer1 has no absolute seek
+
+        # Marshal iTunes art URL from worker thread back to Qt main thread
+        self._artFetched.connect(self._on_art_fetched)
 
     # ------------------------------------------------------------------
     # Qt properties
@@ -210,6 +221,7 @@ class MusicPlayerController(QObject):
             self._mpris_timer.stop()
             self._media_player_path = None
             self._poll_miss_count = 0
+            self._art_search_key = ("", "")
             self._reset_track_state()
             logger.info("MPRIS polling stopped — device disconnected")
 
@@ -276,18 +288,32 @@ class MusicPlayerController(QObject):
             album = str(track.get("Album", ""))
             duration_ms = int(track.get("Duration", 0))
 
+            # --- Album art: prefer BlueZ AVRCP, fall back to iTunes API ---
             raw_art = track.get("AlbumArt", None)
-            if raw_art is None:
-                logger.info("AlbumArt key absent from Track dict (AVRCP art not provided by BlueZ)")
-                art_path = ""
-            else:
-                art_path = str(raw_art)
-                if art_path:
-                    if not art_path.startswith("file://"):
-                        art_path = "file://" + art_path
-                    logger.info("AlbumArt raw=%r  resolved=%s", str(raw_art), art_path)
-                else:
-                    logger.info("AlbumArt key present but empty string")
+            bluez_art = ""
+            if raw_art is not None:
+                bluez_art = str(raw_art)
+                if bluez_art and not bluez_art.startswith("file://"):
+                    bluez_art = "file://" + bluez_art
+                if bluez_art:
+                    logger.info("BlueZ AlbumArt: %s", bluez_art)
+
+            search_key = (title, artist)
+            if bluez_art:
+                # BlueZ provided art directly — use it
+                self.albumArtUrl = bluez_art
+                self._art_search_key = search_key
+            elif search_key != self._art_search_key and title != "No Track Playing" and artist:
+                # New track, no BlueZ art — query iTunes in background
+                self._art_search_key = search_key
+                self.albumArtUrl = ""  # clear stale art while fetching
+                logger.info("No BlueZ art for %r / %r — querying iTunes", title, artist)
+                threading.Thread(
+                    target=self._fetch_itunes_art,
+                    args=(title, artist),
+                    daemon=True,
+                ).start()
+            # else: same track, leave albumArtUrl alone (iTunes fetch may be in progress)
 
             status = str(all_props.get("Status", "stopped"))
             position_ms = int(all_props.get("Position", 0))
@@ -298,7 +324,6 @@ class MusicPlayerController(QObject):
             self.trackTitle = title
             self.artistName = artist
             self.albumName = album
-            self.albumArtUrl = art_path
             self.isPlaying = status == "playing"
             self.totalTime = total_sec
             self.currentTime = current_sec
@@ -309,6 +334,35 @@ class MusicPlayerController(QObject):
             self._media_player_path = None
         except Exception:
             logger.exception("MPRIS poll error")
+
+    @pyqtSlot(str)
+    def _on_art_fetched(self, url: str):
+        """Receives iTunes art URL on the Qt main thread and updates the property."""
+        self.albumArtUrl = url
+
+    def _fetch_itunes_art(self, title: str, artist: str):
+        """Worker thread: query iTunes Search API and emit art URL if found."""
+        try:
+            query = urllib.parse.urlencode({
+                "term": f"{artist} {title}",
+                "entity": "song",
+                "limit": "5",
+            })
+            req_url = f"https://itunes.apple.com/search?{query}"
+            with urllib.request.urlopen(req_url, timeout=8) as resp:
+                data = json.loads(resp.read())
+            results = data.get("results", [])
+            if results:
+                art_url = results[0].get("artworkUrl100", "")
+                if art_url:
+                    # Upgrade from 100×100 thumbnail to 600×600
+                    art_url = art_url.replace("100x100bb", "600x600bb")
+                    logger.info("iTunes art found: %s", art_url)
+                    self._artFetched.emit(art_url)
+                    return
+            logger.info("iTunes art: no results for %r / %r", title, artist)
+        except Exception:
+            logger.exception("iTunes art fetch failed for %r / %r", title, artist)
 
     def _mpris_play_pause(self):
         player = self._get_media_player_iface()
