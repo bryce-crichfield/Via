@@ -17,14 +17,14 @@ Item {
             source: controller.albumArtUrl
             fillMode: Image.PreserveAspectCrop
             visible: controller.albumArtUrl !== ""
-            opacity: 0.3
+            opacity: 0.75
         }
 
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "#aa000000" }
-                GradientStop { position: 1.0; color: "#dd000000" }
+                GradientStop { position: 0.0; color: "#44000000" }
+                GradientStop { position: 1.0; color: "#99000000" }
             }
         }
     }
