@@ -1,0 +1,10 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/assets">
+        <file>assets/icons/play.svg</file>
+        <file>assets/icons/pause.svg</file>
+        <file>assets/icons/next.svg</file>
+        <file>assets/icons/previous.svg</file>
+        <file>assets/icons/bluetooth.svg</file>
+    </qresource>
+</RCC>
