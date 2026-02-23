@@ -111,6 +111,7 @@ ApplicationWindow {
         id: dashboardScreen
         anchors.fill: parent
         visible: !engineController.connected
+        property bool attractMode: false
 
         ColumnLayout {
             anchors.fill: parent
@@ -119,33 +120,35 @@ ApplicationWindow {
             // Top status bar
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 50
+                Layout.preferredHeight: dashboardScreen.attractMode ? 0 : 50
+                clip: true
                 color: "#1a1a1a"
+
+                Behavior on Layout.preferredHeight {
+                    NumberAnimation { duration: 300; easing.type: Easing.InOutCubic }
+                }
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 20
+                    anchors.leftMargin: 8
                     anchors.rightMargin: 20
                     spacing: 20
 
-                    Row {
-                        spacing: 10
+                    Button {
+                        flat: true
+                        implicitWidth: 40
+                        implicitHeight: 40
 
-                        Rectangle {
-                            width: 12
-                            height: 12
-                            radius: 6
-                            color: engineController.connected ? "lime" : "red"
-                            anchors.verticalCenter: parent.verticalCenter
+                        contentItem: Image {
+                            source: "../assets/icons/expand.svg"
+                            width: 22
+                            height: 22
+                            fillMode: Image.PreserveAspectFit
+                            anchors.centerIn: parent
                         }
 
-                        Text {
-                            text: "OBD"
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: engineController.connected ? "lime" : "red"
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
+                        background: Rectangle { color: "transparent" }
+                        onClicked: dashboardScreen.attractMode = true
                     }
 
                     Item { Layout.fillWidth: true }
@@ -220,14 +223,50 @@ ApplicationWindow {
                     visible: deviceController.showDeviceView
                     z: 1
                 }
+
+                // Attract mode — exit button, bottom-right corner
+                Rectangle {
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.margins: 14
+                    width: 40
+                    height: 40
+                    radius: 6
+                    color: "#99000000"
+                    z: 2
+                    visible: dashboardScreen.attractMode
+                    opacity: dashboardScreen.attractMode ? 1.0 : 0.0
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 250 }
+                    }
+
+                    Image {
+                        source: "../assets/icons/compress.svg"
+                        width: 22
+                        height: 22
+                        fillMode: Image.PreserveAspectFit
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: dashboardScreen.attractMode = false
+                    }
+                }
             }
 
             // Bottom tab bar
             Rectangle {
                 id: tabBar
                 Layout.fillWidth: true
-                Layout.preferredHeight: 70
+                Layout.preferredHeight: dashboardScreen.attractMode ? 0 : 70
+                clip: true
                 color: "#0d0d0d"
+
+                Behavior on Layout.preferredHeight {
+                    NumberAnimation { duration: 300; easing.type: Easing.InOutCubic }
+                }
 
                 property int currentIndex: 0
 
