@@ -263,6 +263,10 @@ class MusicPlayerController(QObject):
             album = str(track.get("Album", ""))
             duration_ms = int(track.get("Duration", 0))
 
+            art_path = str(track.get("AlbumArt", ""))
+            if art_path and not art_path.startswith("file://"):
+                art_path = "file://" + art_path
+
             status = str(all_props.get("Status", "stopped"))
             position_ms = int(all_props.get("Position", 0))
 
@@ -272,6 +276,7 @@ class MusicPlayerController(QObject):
             self.trackTitle = title
             self.artistName = artist
             self.albumName = album
+            self.albumArtUrl = art_path
             self.isPlaying = status == "playing"
             self.totalTime = total_sec
             self.currentTime = current_sec
