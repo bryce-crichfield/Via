@@ -238,7 +238,7 @@ ApplicationWindow {
                     TabButton {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        icon: "🔧"
+                        icon: "../assets/icons/engine.svg"
                         label: "ENGINE"
                         active: tabBar.currentIndex === 0
                         onClicked: tabBar.currentIndex = 0
@@ -247,7 +247,7 @@ ApplicationWindow {
                     TabButton {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        icon: "🎵"
+                        icon: "../assets/icons/music.svg"
                         label: "MEDIA"
                         active: tabBar.currentIndex === 1
                         onClicked: tabBar.currentIndex = 1
@@ -256,7 +256,7 @@ ApplicationWindow {
                     TabButton {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        icon: "🗺️"
+                        icon: "../assets/icons/nav.svg"
                         label: "NAV"
                         active: tabBar.currentIndex === 2
                         onClicked: tabBar.currentIndex = 2
@@ -265,7 +265,7 @@ ApplicationWindow {
                     TabButton {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        icon: "📷"
+                        icon: "../assets/icons/camera.svg"
                         label: "CAMERA"
                         active: tabBar.currentIndex === 3
                         onClicked: tabBar.currentIndex = 3

@@ -16,9 +16,11 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 5
         
-        Text {
-            text: button.icon
-            font.pixelSize: 24
+        Image {
+            source: button.icon
+            width: 26
+            height: 26
+            fillMode: Image.PreserveAspectFit
             Layout.alignment: Qt.AlignHCenter
         }
         

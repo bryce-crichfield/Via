@@ -42,12 +42,14 @@ Item {
                 color: "#555555"
                 visible: !deviceController.hasConnectedDevice
             }
-            Text {
+            Image {
                 Layout.alignment: Qt.AlignHCenter
-                text: deviceController.hasConnectedDevice
-                      ? root.iconForType(deviceController.deviceType)
-                      : "📶"
-                font.pixelSize: 72
+                source: root.iconForType(
+                    deviceController.hasConnectedDevice ? deviceController.deviceType : "")
+                width: 72
+                height: 72
+                fillMode: Image.PreserveAspectFit
+                opacity: deviceController.hasConnectedDevice ? 1.0 : 0.3
             }
 
             Text {
@@ -105,9 +107,9 @@ Item {
     }
 
     function iconForType(type) {
-        if (type === "phone") return "📱"
-        if (type && type.indexOf("audio") !== -1) return "🎧"
-        if (type === "computer") return "💻"
-        return "📶"
+        if (type === "phone") return "../assets/icons/phone.svg"
+        if (type && type.indexOf("audio") !== -1) return "../assets/icons/headphones.svg"
+        if (type === "computer") return "../assets/icons/laptop.svg"
+        return "../assets/icons/bluetooth.svg"
     }
 }

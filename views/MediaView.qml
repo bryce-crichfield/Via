@@ -84,14 +84,14 @@ Item {
 
             Button {
                 flat: true
-                text: "⏮"
-                font.pixelSize: 28
-                contentItem: Text {
-                    text: parent.text
-                    font: parent.font
-                    color: "white"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                implicitWidth: 52
+                implicitHeight: 52
+                contentItem: Image {
+                    source: "../assets/icons/prev.svg"
+                    width: 36
+                    height: 36
+                    fillMode: Image.PreserveAspectFit
+                    anchors.centerIn: parent
                 }
                 background: Rectangle { color: "transparent" }
                 onClicked: controller.previousRequested()
@@ -99,14 +99,16 @@ Item {
 
             Button {
                 flat: true
-                text: controller.isPlaying ? "⏸" : "▶"
-                font.pixelSize: 36
-                contentItem: Text {
-                    text: parent.text
-                    font: parent.font
-                    color: "cyan"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                implicitWidth: 64
+                implicitHeight: 64
+                contentItem: Image {
+                    source: controller.isPlaying
+                            ? "../assets/icons/pause.svg"
+                            : "../assets/icons/play.svg"
+                    width: 48
+                    height: 48
+                    fillMode: Image.PreserveAspectFit
+                    anchors.centerIn: parent
                 }
                 background: Rectangle { color: "transparent" }
                 onClicked: controller.playPauseRequested()
@@ -114,14 +116,14 @@ Item {
 
             Button {
                 flat: true
-                text: "⏭"
-                font.pixelSize: 28
-                contentItem: Text {
-                    text: parent.text
-                    font: parent.font
-                    color: "white"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                implicitWidth: 52
+                implicitHeight: 52
+                contentItem: Image {
+                    source: "../assets/icons/next.svg"
+                    width: 36
+                    height: 36
+                    fillMode: Image.PreserveAspectFit
+                    anchors.centerIn: parent
                 }
                 background: Rectangle { color: "transparent" }
                 onClicked: controller.nextRequested()
@@ -185,11 +187,12 @@ Item {
             height: 40
             flat: true
 
-            contentItem: Text {
-                text: "🔵"
-                font.pixelSize: 22
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            contentItem: Image {
+                source: "../assets/icons/bluetooth.svg"
+                width: 22
+                height: 22
+                fillMode: Image.PreserveAspectFit
+                anchors.centerIn: parent
                 opacity: deviceController.hasConnectedDevice ? 1.0 : 0.4
             }
 
