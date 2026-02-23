@@ -75,11 +75,10 @@ Item {
             }
         }
 
-        // Playback controls — right side, vertically centered
+        // Playback controls — centered
         RowLayout {
-            anchors.right: parent.right
+            anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: -30
             spacing: 24
 
             Button {
