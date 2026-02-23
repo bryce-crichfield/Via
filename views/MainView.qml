@@ -195,7 +195,12 @@ ApplicationWindow {
                     controller: musicController
                 }
 
-      
+                NavigationView {
+                    id: navigationView
+                    anchors.fill: parent
+                    visible: tabBar.currentIndex === 2
+                    controller: navigationController
+                }
 
                 Rectangle {
                     anchors.fill: parent

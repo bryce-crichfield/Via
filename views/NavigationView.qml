@@ -25,6 +25,14 @@ WebEngineView {
         );
     }
     
+    // Forward ongoing GPS updates from the controller into the map
+    Connections {
+        target: controller
+        function onGpsUpdated(lat, lon, accuracy) {
+            navigationView.updateGPSData(lat, lon, accuracy)
+        }
+    }
+
     // Handle page load completion
     onLoadingChanged: function(loadRequest) {
         if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
