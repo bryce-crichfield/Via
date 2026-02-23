@@ -8,17 +8,14 @@ from PyQt6.QtQml import QQmlApplicationEngine
 from PyQt6.QtWebEngineQuick import QtWebEngineQuick
 
 import config
+import log
 import models
 from controllers.device_controller import DeviceController
 from controllers.engine_controller import EngineController
 from controllers.media_controller import MusicPlayerController
 from controllers.navigation_controller import NavigationController
 
-logging.basicConfig(
-    level=getattr(logging, config.LOG_LEVEL, logging.INFO),
-    format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
-    datefmt="%H:%M:%S",
-)
+log.setup()
 
 logger = logging.getLogger(__name__)
 

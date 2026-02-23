@@ -102,6 +102,7 @@ class MusicPlayerController(QObject):
         if self._album_art_url != value:
             self._album_art_url = value
             self.albumArtUrlChanged.emit(value)
+            logger.info("albumArtUrl → %s", value if value else "(cleared)")
 
     @pyqtProperty(bool, notify=isPlayingChanged)
     def isPlaying(self):
@@ -258,14 +259,24 @@ class MusicPlayerController(QObject):
             all_props = props_iface.GetAll(_MEDIA_PLAYER_IFACE)
 
             track = all_props.get("Track", {})
+            logger.debug("Track dict keys from BlueZ: %s", list(track.keys()))
             title = str(track.get("Title", "")) or "No Track Playing"
             artist = str(track.get("Artist", ""))
             album = str(track.get("Album", ""))
             duration_ms = int(track.get("Duration", 0))
 
-            art_path = str(track.get("AlbumArt", ""))
-            if art_path and not art_path.startswith("file://"):
-                art_path = "file://" + art_path
+            raw_art = track.get("AlbumArt", None)
+            if raw_art is None:
+                logger.debug("AlbumArt key absent from Track dict (AVRCP art not provided)")
+                art_path = ""
+            else:
+                art_path = str(raw_art)
+                if art_path:
+                    if not art_path.startswith("file://"):
+                        art_path = "file://" + art_path
+                    logger.debug("AlbumArt raw=%r  resolved=%s", str(raw_art), art_path)
+                else:
+                    logger.debug("AlbumArt key present but empty")
 
             status = str(all_props.get("Status", "stopped"))
             position_ms = int(all_props.get("Position", 0))
